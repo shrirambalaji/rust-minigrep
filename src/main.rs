@@ -18,6 +18,10 @@ fn main() {
     println!("Searching for \"{}\"", query);
     println!("In file {}", filepath);
 
+    // Box<dyn Error>
+    // dyn -> indicates a dynamic dispatch. W.r.t generics we know rust does monomorphization.
+    // using dyn allows rust to have different types of trait objects, that are evaluated during runtime.
+    // here Box acts as a smart pointer, that would point to a table of methods to handle the trait object of type `Error`.
     if let Err(e) = minigrep::run(config) {
         eprintln!("An error occured {}", e);
         process::exit(1);
