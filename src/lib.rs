@@ -1,5 +1,8 @@
 use std::{error::Error, fs};
 
+const OPTION_CASE_INSENSITIVE_LONG: &str = "--case-insensitive";
+const OPTION_CASE_INSENSITIVE_SHORT: &str = "-i";
+
 #[derive(Debug)]
 pub struct ConfigOptions {
     pub case_insensitive: bool,
@@ -12,25 +15,20 @@ pub struct Config<'a> {
     pub options: Option<ConfigOptions>,
 }
 
-const OPTION_CASE_INSENSITIVE_LONG: &str = "--case-insensitive";
-const OPTION_CASE_INSENSITIVE_SHORT: &str = "-i";
-
 impl<'a> Config<'a> {
     pub fn new(args: &'a Vec<String>) -> Result<Self, &'static str> {
         if args.len() < 3 {
             return Err("not enough arguments");
         }
 
-        let (input_options, grep_args): (Vec<_>, Vec<_>) =
+        // iter.partition partitions an iterator into two buckets (A, B)
+        // A -> items that match predicate
+        // B -> items that dont match predicate
+        let (minigrep_options, minigrep_args): (Vec<_>, Vec<_>) =
             args.into_iter().partition(|arg| arg.starts_with("-"));
 
-        let query = grep_args[1];
-        let filepath = grep_args[2];
-
-        println!("Config.options: {:?}", input_options);
-        println!("Config.query: {:?}", query);
-        println!("Config.filepath: {:?}", filepath);
-
+        let query = minigrep_args[1];
+        let filepath = minigrep_args[2];
         let options = None;
         let mut config = Self {
             filepath: &filepath,
@@ -39,8 +37,8 @@ impl<'a> Config<'a> {
         };
 
         // why is the && necessary?
-        if input_options.contains(&&OPTION_CASE_INSENSITIVE_LONG.to_owned())
-            || input_options.contains(&&OPTION_CASE_INSENSITIVE_SHORT.to_owned())
+        if minigrep_options.contains(&&OPTION_CASE_INSENSITIVE_LONG.to_owned())
+            || minigrep_options.contains(&&OPTION_CASE_INSENSITIVE_SHORT.to_owned())
         {
             config.options = Some(ConfigOptions {
                 case_insensitive: true,
@@ -53,13 +51,11 @@ impl<'a> Config<'a> {
 
 pub fn search(query: &str, contents: &str) -> Vec<String> {
     let mut results: Vec<String> = Vec::new();
-
     for line in contents.lines() {
         if line.contains(query) {
             results.push(line.to_owned());
         }
     }
-
     results
 }
 
@@ -70,9 +66,8 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     println!("With text: \n {:?}", file_contents);
 
     let results = search(config.query, &file_contents);
-
-    for line in results {
-        println!("{}", line);
+    for hit in results {
+        println!("{}", hit);
     }
 
     Ok(())
