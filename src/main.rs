@@ -12,9 +12,7 @@ fn main() {
         process::exit(1);
     });
 
-    let query = config.query;
-    let filepath = config.filepath;
-
+    let Config { query, filepath, .. } = config;
     println!("Searching for \"{}\"", query);
     println!("In file {}", filepath);
 
